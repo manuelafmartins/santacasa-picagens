@@ -1,2 +1,5 @@
 streamlit
 openai
+plotly
+seaborn
+streamlit-aggrid
