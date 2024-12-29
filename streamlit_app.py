@@ -1,4 +1,4 @@
-import streamlit as st
+ï»¿import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
@@ -11,7 +11,7 @@ import matplotlib.patches as mpatches
 
 # ====================== CONFIG STREAMLIT ======================
 st.set_page_config(
-    page_title="Centro de Medicina Física e Reabilitação",
+    page_title="Centro de Medicina FÃ­sica e ReabilitaÃ§Ã£o",
     page_icon="??",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -22,16 +22,16 @@ st.markdown(
        width='400'/></div>""",
     unsafe_allow_html=True
 )
-st.markdown("<h1 style='text-align: center; color: #003366;'>Centro de Medicina Física e Reabilitação</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #003366;'>Centro de Medicina FÃ­sica e ReabilitaÃ§Ã£o</h1>", unsafe_allow_html=True)
 st.markdown("<h4 style='text-align: center; color: #6A6A6A;'>Dashboard de Assiduidade</h4>", unsafe_allow_html=True)
 st.write("")
 
 # ====================== SIDEBAR ================================
-st.sidebar.header("Opções")
+st.sidebar.header("OpÃ§Ãµes")
 uploaded_file = st.sidebar.file_uploader("Carregar Ficheiro XLS", type=["xls","xlsx"])
-tolerancia = st.sidebar.number_input("Minutos de Tolerância", min_value=0, max_value=60, value=2, step=1)
+tolerancia = st.sidebar.number_input("Minutos de TolerÃ¢ncia", min_value=0, max_value=60, value=2, step=1)
 
-# ====================== Funções Auxiliares ======================
+# ====================== FunÃ§Ãµes Auxiliares ======================
 
 def carregar_dados(uploaded_file):
     try:
@@ -41,10 +41,10 @@ def carregar_dados(uploaded_file):
         df = df[1:].reset_index(drop=True)
         if 'Data' in df.columns:
             df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y', errors='coerce')
-        colunas_minimas = ['Data','N.º Mec.','Turnos Previstos']
+        colunas_minimas = ['Data','N.Âº Mec.','Turnos Previstos']
         for col in colunas_minimas:
             if col not in df.columns:
-                st.warning(f"Falta a coluna obrigatória: {col}. Verifique o ficheiro.")
+                st.warning(f"Falta a coluna obrigatÃ³ria: {col}. Verifique o ficheiro.")
                 return None
         return df
     except Exception as e:
@@ -53,20 +53,20 @@ def carregar_dados(uploaded_file):
 
 def verificar_entrada_saida(linha, tolerancia_min=2):
     entrada_prevista = to_time(str(linha.get('Entrada Prevista','00:00')))
-    saida_prevista   = to_time(str(linha.get('Saída Prevista','00:00')))
+    saida_prevista   = to_time(str(linha.get('SaÃ­da Prevista','00:00')))
     entrada_real     = to_time(str(linha.get('E1','00:00')))
-    saida_real       = to_time(str(linha.get('Saída Real','00:00')))
+    saida_real       = to_time(str(linha.get('SaÃ­da Real','00:00')))
     turno_lower = str(linha.get('Turnos Previstos','')).lower()
     if any(x in turno_lower for x in ["dc", "do", "fe", "bm", "lp"]):
         return True
     tol = timedelta(minutes=tolerancia_min)
-    # Caso 1: Entrada Real está '00:00' e Saída Real é válida
+    # Caso 1: Entrada Real estÃ¡ '00:00' e SaÃ­da Real Ã© vÃ¡lida
     if (entrada_real is None) or (entrada_real.strftime("%H:%M") == '00:00'):
         if saida_real and saida_real >= (saida_prevista - tol):
             return True
         else:
             return False
-    # Caso 2: Entrada Real válida
+    # Caso 2: Entrada Real vÃ¡lida
     else:
         if (entrada_real <= (entrada_prevista + tol)) and (saida_real >= (saida_prevista - tol)):
             return True
@@ -81,7 +81,7 @@ def to_time(hhmm):
 
 def obter_saida_real(linha):
     import pandas as pd
-    # Coletar todas as possíveis saídas
+    # Coletar todas as possÃ­veis saÃ­das
     saidas = []
     for col in ['E1','E2','E3','E4','S1','S2','S3','S4']:
         val = linha.get(col, '00:00')
@@ -93,7 +93,7 @@ def obter_saida_real(linha):
 
     # Converter strings p/ datetime no mesmo dia
     # e pegar a "maior" (i.e. a mais tarde).
-    # Como não temos a data exata nesse momento, forçamos só HH:MM:
+    # Como nÃ£o temos a data exata nesse momento, forÃ§amos sÃ³ HH:MM:
     saida_times = pd.to_datetime(saidas, format="%H:%M", errors='coerce')
     maior_saida = max(saida_times)
 
@@ -102,7 +102,7 @@ def obter_saida_real(linha):
 def calcular_metricas_basicas(df):
     periodo_inicio = df['Data'].min()
     periodo_fim = df['Data'].max()
-    num_colaboradores = df['N.º Mec.'].nunique()
+    num_colaboradores = df['N.Âº Mec.'].nunique()
     num_registos = len(df)
     return periodo_inicio, periodo_fim, num_colaboradores, num_registos
 
@@ -110,10 +110,10 @@ def classificar_dia(turno):
     if isinstance(turno, str):
         turno_lower = turno.lower()
         if any(x in turno_lower for x in ["dc","do","fe","bm","lp"]):
-            return "Ausência"
+            return "AusÃªncia"
         else:
             return "Trabalho"
-    return "Ausência"
+    return "AusÃªncia"
 
 def extrair_horario_tdf(texto_tdf):
     import re
@@ -161,13 +161,13 @@ def arredondar_saida_down(t):
     return t
 
 def criar_tabela_horarios_por_colaborador(df):
-    base_cols = ['N.º Mec.','Nome','Turnos Previstos','Data','E1','E2','E3','E4','E5','E6','E7','E8']
+    base_cols = ['N.Âº Mec.','Nome','Turnos Previstos','Data','E1','E2','E3','E4','E5','E6','E7','E8']
     base_cols = [c for c in base_cols if c in df.columns]
     df_temp = df[base_cols].copy()
     df_temp['dow'] = df_temp['Data'].dt.weekday
     df_temp['turno_lower'] = df_temp['Turnos Previstos'].astype(str).str.lower()
     ausencias_possiveis = ["bm","lp","fe","dc","do"]
-    agrupado = df_temp.groupby(['N.º Mec.', 'Nome'], as_index=False)
+    agrupado = df_temp.groupby(['N.Âº Mec.', 'Nome'], as_index=False)
     lista_linhas = []
     for (mec, nome), subset_colab in agrupado:
         sem_entrada = '08:00'
@@ -175,7 +175,7 @@ def criar_tabela_horarios_por_colaborador(df):
         sab_entrada = '08:00'
         sab_saida   = '13:00'
         turnos_final = ''
-        # Dias úteis
+        # Dias Ãºteis
         subset_dias_uteis = subset_colab[subset_colab['dow'] <= 4].copy().sort_values('Data')
         tdf_rows = subset_dias_uteis[subset_dias_uteis['turno_lower'].str.contains('(tdf|tf)', na=False)]
         if len(tdf_rows) > 0:
@@ -204,7 +204,7 @@ def criar_tabela_horarios_por_colaborador(df):
                     if tudo_ausencia:
                         sem_entrada = ''
                         sem_saida   = ''
-        # Sábado
+        # SÃ¡bado
         subset_sab = subset_colab[subset_colab['dow'] == 5].copy()
         if len(subset_sab) > 0:
             sab_tdf = subset_sab[subset_sab['turno_lower'].str.contains('(tdf|tf)', na=False)]
@@ -227,43 +227,43 @@ def criar_tabela_horarios_por_colaborador(df):
                 sab_saida   = ''
         d = {
             'Nome': nome,
-            'N.º Mec.': mec,
+            'N.Âº Mec.': mec,
             'Turnos Previstos': turnos_final,
-            'Horário Semanal (Entrada)': sem_entrada,
-            'Horário Semanal (Saída)':   sem_saida,
-            'Horário Sábado (Entrada)':  sab_entrada,
-            'Horário Sábado (Saída)':    sab_saida
+            'HorÃ¡rio Semanal (Entrada)': sem_entrada,
+            'HorÃ¡rio Semanal (SaÃ­da)':   sem_saida,
+            'HorÃ¡rio SÃ¡bado (Entrada)':  sab_entrada,
+            'HorÃ¡rio SÃ¡bado (SaÃ­da)':    sab_saida
         }
         lista_linhas.append(d)
     df_colabs = pd.DataFrame(lista_linhas)
-    df_colabs.sort_values(by=["Nome","N.º Mec."], inplace=True)
+    df_colabs.sort_values(by=["Nome","N.Âº Mec."], inplace=True)
     return df_colabs
 
 def aplicar_horarios_confirmados_no_df(df_original, df_horarios):
     df_final = df_original.copy()
     df_final['Entrada Prevista'] = '00:00'
-    df_final['Saída Prevista']   = '00:00'
-    hdic = df_horarios.set_index('N.º Mec.').to_dict('index')
+    df_final['SaÃ­da Prevista']   = '00:00'
+    hdic = df_horarios.set_index('N.Âº Mec.').to_dict('index')
     for i, row in df_final.iterrows():
-        mec = row['N.º Mec.']
+        mec = row['N.Âº Mec.']
         dow = row['Data'].weekday() if pd.notna(row['Data']) else None
         if (mec in hdic) and (dow is not None):
-            sem_entrada = hdic[mec]['Horário Semanal (Entrada)']
-            sem_saida   = hdic[mec]['Horário Semanal (Saída)']
-            sab_entrada = hdic[mec]['Horário Sábado (Entrada)']
-            sab_saida   = hdic[mec]['Horário Sábado (Saída)']
+            sem_entrada = hdic[mec]['HorÃ¡rio Semanal (Entrada)']
+            sem_saida   = hdic[mec]['HorÃ¡rio Semanal (SaÃ­da)']
+            sab_entrada = hdic[mec]['HorÃ¡rio SÃ¡bado (Entrada)']
+            sab_saida   = hdic[mec]['HorÃ¡rio SÃ¡bado (SaÃ­da)']
             if dow <=4:
                 df_final.at[i,'Entrada Prevista'] = sem_entrada if sem_entrada else '00:00'
-                df_final.at[i,'Saída Prevista']   = sem_saida if sem_saida else '00:00'
+                df_final.at[i,'SaÃ­da Prevista']   = sem_saida if sem_saida else '00:00'
             elif dow==5:
                 df_final.at[i,'Entrada Prevista'] = sab_entrada if sab_entrada else '00:00'
-                df_final.at[i,'Saída Prevista']   = sab_saida if sab_saida else '00:00'
+                df_final.at[i,'SaÃ­da Prevista']   = sab_saida if sab_saida else '00:00'
             else:
                 df_final.at[i,'Entrada Prevista'] = '00:00'
-                df_final.at[i,'Saída Prevista']   = '00:00'
+                df_final.at[i,'SaÃ­da Prevista']   = '00:00'
         else:
             df_final.at[i,'Entrada Prevista'] = '00:00'
-            df_final.at[i,'Saída Prevista']   = '00:00'
+            df_final.at[i,'SaÃ­da Prevista']   = '00:00'
     return df_final
 
 def filtrar_dias_possiveis(df):
@@ -302,7 +302,7 @@ def filtrar_dias_trabalho(df):
     df2.drop(columns=['dow','eh_aus','incl'], inplace=True, errors='ignore')
     return df2
 
-# ====================== LÓGICA PRINCIPAL ======================
+# ====================== LÃ“GICA PRINCIPAL ======================
 if uploaded_file is not None:
     df = carregar_dados(uploaded_file)
     if df is not None:
@@ -310,7 +310,7 @@ if uploaded_file is not None:
         df['Tipo de Dia'] = df['Turnos Previstos'].apply(classificar_dia)
         df = df.sort_values(by='Nome', ascending=True).reset_index(drop=True)
 
-        st.markdown("## 1. Confirma/edita os horários dos turnos")
+        st.markdown("## 1. Confirma/edita os horÃ¡rios dos turnos")
         if 'horarios_confirmados' not in st.session_state:
             st.session_state['horarios_confirmados'] = False
 
@@ -319,73 +319,73 @@ if uploaded_file is not None:
 
         df_editado = st.data_editor(st.session_state['df_horarios_por_colab'], num_rows="dynamic")
 
-        if st.button("Confirmar Horários"):
+        if st.button("Confirmar HorÃ¡rios"):
             st.session_state['df_horarios_por_colab'] = df_editado
             st.session_state['horarios_confirmados'] = True
-            st.success("Horários confirmados com sucesso! Clique em 'Gerar Dashboard' para ver métricas.")
+            st.success("HorÃ¡rios confirmados com sucesso! Clique em 'Gerar Dashboard' para ver mÃ©tricas.")
 
         if st.session_state['horarios_confirmados'] and st.button("Gerar Dashboard"):
-            # 1) Aplica horários
+            # 1) Aplica horÃ¡rios
             df_final = aplicar_horarios_confirmados_no_df(df, st.session_state['df_horarios_por_colab'])
-            # 2) Define Saída Real
-            df_final['Saída Real'] = df_final.apply(obter_saida_real, axis=1)
+            # 2) Define SaÃ­da Real
+            df_final['SaÃ­da Real'] = df_final.apply(obter_saida_real, axis=1)
 
-            # Exibir DataFrame final para depuração
-            st.write("### DataFrame Final com Horários Previsto e Real")
+            # Exibir DataFrame final para depuraÃ§Ã£o
+            st.write("### DataFrame Final com HorÃ¡rios Previsto e Real")
             st.dataframe(df_final)
 
-            # 3) Dias Possíveis (sem domingo, sem ausências, sem exigir picagem)
+            # 3) Dias PossÃ­veis (sem domingo, sem ausÃªncias, sem exigir picagem)
             df_base = filtrar_dias_possiveis(df_final)
             # 4) Dias Trabalhados (exige picagens/turno)
             df_trabalho = df_final.copy()
             #df_trabalho = filtrar_dias_trabalho(df_final)
 
 
-            # 5) Agrupamento: Dias Possíveis
-            df_possible = df_base.groupby(['N.º Mec.', 'Nome'])['Data'].nunique().reset_index(name='Dias Possíveis')
+            # 5) Agrupamento: Dias PossÃ­veis
+            df_possible = df_base.groupby(['N.Âº Mec.', 'Nome'])['Data'].nunique().reset_index(name='Dias PossÃ­veis')
             # 6) Agrupamento: Dias Trabalhados
-            df_worked  = df_trabalho.groupby(['N.º Mec.', 'Nome'])['Data'].nunique().reset_index(name='Dias Trabalhados')
-            df_merged = pd.merge(df_possible, df_worked, on=['N.º Mec.', 'Nome'], how='outer').fillna(0)
-            df_merged['Dias Possíveis'] = df_merged['Dias Possíveis'].astype(int)
+            df_worked  = df_trabalho.groupby(['N.Âº Mec.', 'Nome'])['Data'].nunique().reset_index(name='Dias Trabalhados')
+            df_merged = pd.merge(df_possible, df_worked, on=['N.Âº Mec.', 'Nome'], how='outer').fillna(0)
+            df_merged['Dias PossÃ­veis'] = df_merged['Dias PossÃ­veis'].astype(int)
             df_merged['Dias Trabalhados'] = df_merged['Dias Trabalhados'].astype(int)
 
-            # 7) Verificação de cumprimento
-            df_trabalho['Cumpriu Horário'] = df_trabalho.apply(lambda row: verificar_entrada_saida(row, tolerancia), axis=1)
+            # 7) VerificaÃ§Ã£o de cumprimento
+            df_trabalho['Cumpriu HorÃ¡rio'] = df_trabalho.apply(lambda row: verificar_entrada_saida(row, tolerancia), axis=1)
             test = df_trabalho.copy()
 
             # Definir 'incumprimentos' aqui
-            incumprimentos = df_trabalho[df_trabalho['Cumpriu Horário'] == False][
-                ['N.º Mec.', 'Nome','Data','E1','Saída Real','Turnos Previstos','Entrada Prevista','Saída Prevista']
+            incumprimentos = df_trabalho[df_trabalho['Cumpriu HorÃ¡rio'] == False][
+                ['N.Âº Mec.', 'Nome','Data','E1','SaÃ­da Real','Turnos Previstos','Entrada Prevista','SaÃ­da Prevista']
             ]
 
             # 8) Agrupamento para Ranking
-            cumprimento_por_func = df_trabalho.groupby(['N.º Mec.','Nome'])['Cumpriu Horário'].agg(['sum','count']).reset_index()
+            cumprimento_por_func = df_trabalho.groupby(['N.Âº Mec.','Nome'])['Cumpriu HorÃ¡rio'].agg(['sum','count']).reset_index()
             cumprimento_por_func['Percentual_Cumprimento'] = 100.0 * (cumprimento_por_func['sum'] / cumprimento_por_func['count'])
             cumprimento_por_func.sort_values('Percentual_Cumprimento', ascending=False, inplace=True)
 
             # Organizar o Dashboard em Abas
-            tab1, tab2, tab3 = st.tabs(["Visão Geral", "Visão Colaboradores", "Detalhe dos Incumprimentos"])
+            tab1, tab2, tab3 = st.tabs(["VisÃ£o Geral", "VisÃ£o Colaboradores", "Detalhe dos Incumprimentos"])
 
             with tab1:
-                st.markdown("### Visão Geral")
-                # Calcular métricas básicas
+                st.markdown("### VisÃ£o Geral")
+                # Calcular mÃ©tricas bÃ¡sicas
                 periodo_inicio, periodo_fim, num_colaboradores, num_registos = calcular_metricas_basicas(df_final)
 
                 c1, c2, c3, c4, c5, c6 = st.columns(6)
-                c1.metric("Período Início", periodo_inicio.strftime('%d/%m/%Y') if pd.notna(periodo_inicio) else '-')
-                c2.metric("Período Fim", periodo_fim.strftime('%d/%m/%Y') if pd.notna(periodo_fim) else '-')
-                c3.metric("Nº Colaboradores", num_colaboradores)
-                c4.metric("Nº Registos", num_registos)
+                c1.metric("PerÃ­odo InÃ­cio", periodo_inicio.strftime('%d/%m/%Y') if pd.notna(periodo_inicio) else '-')
+                c2.metric("PerÃ­odo Fim", periodo_fim.strftime('%d/%m/%Y') if pd.notna(periodo_fim) else '-')
+                c3.metric("NÂº Colaboradores", num_colaboradores)
+                c4.metric("NÂº Registos", num_registos)
                 c5.metric("Incumprimentos", incumprimentos.shape[0])
                 c6.metric("Percentagem de Assiduidade", f"{cumprimento_por_func['Percentual_Cumprimento'].mean():.2f}%")
                 
-                # Heatmap de Assiduidade Diária
-                st.markdown("### Status Diário")
+                # Heatmap de Assiduidade DiÃ¡ria
+                st.markdown("### Status DiÃ¡rio")
                 
                 # Criar coluna 'Status'
                 def determinar_status(row):
                     turno_val = row.get('Turnos Previstos', '')
-                    cumpriu = row.get('Cumpriu Horário', False)
+                    cumpriu = row.get('Cumpriu HorÃ¡rio', False)
                     data = row.get('Data', None)
                     
                     if isinstance(data, pd.Timestamp):
@@ -395,12 +395,12 @@ if uploaded_file is not None:
                         is_saturday = False
                         is_sunday = False
                     
-                    # Nova Regra: Se for sábado ou domingo e 'Turnos Previstos' estiver vazio ou NaN
+                    # Nova Regra: Se for sÃ¡bado ou domingo e 'Turnos Previstos' estiver vazio ou NaN
                     if (is_saturday or is_sunday):
                         if pd.isna(turno_val) or str(turno_val).strip() == '':
                             return 'DC'
                     
-                    # Converter 'Turnos Previstos' para string somente se não for NaN
+                    # Converter 'Turnos Previstos' para string somente se nÃ£o for NaN
                     if pd.notna(turno_val):
                         turno = str(turno_val).lower()
                     else:
@@ -425,7 +425,7 @@ if uploaded_file is not None:
                 # Criar tabela pivot para o heatmap
                 heatmap_data = df_trabalho.pivot_table(index='Nome', columns='Data', values='Status', aggfunc='first')
                 
-                # Garantir que as datas estão no formato 'YYYY-MM-DD' e ordenadas
+                # Garantir que as datas estÃ£o no formato 'YYYY-MM-DD' e ordenadas
                 heatmap_data.columns = pd.to_datetime(heatmap_data.columns).strftime('%Y-%m-%d')
                 heatmap_data = heatmap_data.reindex(sorted(heatmap_data.columns), axis=1)
                 
@@ -447,7 +447,7 @@ if uploaded_file is not None:
                 bounds = list(range(1, len(categories)+2))  # [1,2,3,4,5,6,7]
                 norm = BoundaryNorm(bounds, cmap.N)
                 
-                # Mapear 'Status' para códigos numéricos
+                # Mapear 'Status' para cÃ³digos numÃ©ricos
                 heatmap_data_num = heatmap_data.replace(status_mapping)
                 
                 # Plotar o heatmap
@@ -457,14 +457,14 @@ if uploaded_file is not None:
                 # Rotacionar labels do eixo x para melhor legibilidade
                 plt.xticks(rotation=90)
                 
-                # Criar a legenda com descrições completas
+                # Criar a legenda com descriÃ§Ãµes completas
                 status_labels = {
-                    'Cumprimento': 'Cumprimento de Horário',
-                    'FE': 'Férias',
-                    'BM': 'Baixa Médica',
-                    'LP': 'Licença de Parentalidade',
+                    'Cumprimento': 'Cumprimento de HorÃ¡rio',
+                    'FE': 'FÃ©rias',
+                    'BM': 'Baixa MÃ©dica',
+                    'LP': 'LicenÃ§a de Parentalidade',
                     'DC': 'Descanso',
-                    'Incumprimento': 'Incumprimento de Horário'
+                    'Incumprimento': 'Incumprimento de HorÃ¡rio'
                 }
                 legend_elements = [
                     mpatches.Patch(
@@ -480,16 +480,16 @@ if uploaded_file is not None:
                     borderaxespad=0.
                 )
                 
-                # Ajustar layout para evitar sobreposição
+                # Ajustar layout para evitar sobreposiÃ§Ã£o
                 plt.tight_layout()
                 
                 # Exibir o heatmap no Streamlit
                 st.pyplot(plt)
                 
-                # Download de Relatório
+                # Download de RelatÃ³rio
                 csv = df_merged.to_csv(index=False).encode('utf-8')
                 st.download_button(
-                    label="Download de Relatório CSV",
+                    label="Download de RelatÃ³rio CSV",
                     data=csv,
                     file_name='assiduidade_relatorio.csv',
                     mime='text/csv',
@@ -499,8 +499,8 @@ if uploaded_file is not None:
                 st.markdown("### Detalhamento por Colaborador")
                 mask_working = df_trabalho['Status'].isin(['Cumprimento', 'Incumprimento'])
                 df_worked = df_trabalho[mask_working]
-                # Agrupar por Nº Mec. e Nome para calcular dias em cumprimento e dias trabalhados
-                cumprimento_por_func = df_worked.groupby(['N.º Mec.', 'Nome'])['Cumpriu Horário'].agg(['sum', 'count']).reset_index()
+                # Agrupar por NÂº Mec. e Nome para calcular dias em cumprimento e dias trabalhados
+                cumprimento_por_func = df_worked.groupby(['N.Âº Mec.', 'Nome'])['Cumpriu HorÃ¡rio'].agg(['sum', 'count']).reset_index()
 
                 # Renomear as colunas para melhor entendimento
                 cumprimento_por_func.rename(columns={
@@ -516,7 +516,7 @@ if uploaded_file is not None:
                 # Ordenar por Percentagem de Cumprimento de forma decrescente
                 cumprimento_por_func.sort_values('Percentagem_Cumprimento', ascending=False, inplace=True)
                 # Mesclar df_possible com cumprimento_por_func
-                df_merged = pd.merge(df_possible, cumprimento_por_func, on=['N.º Mec.', 'Nome'], how='left').fillna({
+                df_merged = pd.merge(df_possible, cumprimento_por_func, on=['N.Âº Mec.', 'Nome'], how='left').fillna({
                     'Dias em Cumprimento': 0,
                     'Dias Trabalhados': 0,
                     'Percentagem_Cumprimento': '-'
@@ -527,18 +527,18 @@ if uploaded_file is not None:
                 df_merged['Dias Trabalhados'] = df_merged['Dias Trabalhados'].astype(int)
 
                 
-                df_detalhamento = df_merged[['Nome', 'N.º Mec.', 'Dias em Cumprimento', 'Dias Trabalhados', 'Percentagem_Cumprimento']].copy()
+                df_detalhamento = df_merged[['Nome', 'N.Âº Mec.', 'Dias em Cumprimento', 'Dias Trabalhados', 'Percentagem_Cumprimento']].copy()
     
                 # Renomear as colunas para melhor legibilidade
                 df_detalhamento.rename(columns={
                     'Nome': 'NOME',
-                    'N.º Mec.': 'Nº MECANOGRAFICO',
+                    'N.Âº Mec.': 'NÂº MECANOGRAFICO',
                     'Dias em Cumprimento': 'DIAS EM CUMPRIMENTOS',
                     'Dias Trabalhados': 'TOTAL DE DIAS DE TRABALHO',
                     'Percentagem_Cumprimento': 'PERCENTAGEM DE CUMPRIMENTO'
                 }, inplace=True)
                 
-                # Garantir que o DataFrame está ordenado pelo 'NOME' de forma ascendente e resetar o índice
+                # Garantir que o DataFrame estÃ¡ ordenado pelo 'NOME' de forma ascendente e resetar o Ã­ndice
                 df_detalhamento = df_detalhamento.sort_values(by='NOME', ascending=True).reset_index(drop=True)
                 
                 # Substituir valores NaN ou infinidades por '-'
@@ -551,19 +551,19 @@ if uploaded_file is not None:
                 st.markdown("### Detalhes de Incumprimentos")
                 
                 # Selecionar as colunas relevantes e remover 'Turnos Previstos'
-                incumprimentos = df_trabalho[df_trabalho['Cumpriu Horário'] == False][
-                    ['N.º Mec.', 'Nome', 'Data', 'E1', 'Saída Real', 'Entrada Prevista', 'Saída Prevista']
+                incumprimentos = df_trabalho[df_trabalho['Cumpriu HorÃ¡rio'] == False][
+                    ['N.Âº Mec.', 'Nome', 'Data', 'E1', 'SaÃ­da Real', 'Entrada Prevista', 'SaÃ­da Prevista']
                 ].copy()
                 
-                # Renomear as colunas para uma formatação consistente
+                # Renomear as colunas para uma formataÃ§Ã£o consistente
                 incumprimentos.rename(columns={
                     'Nome': 'NOME',
-                    'N.º Mec.': 'Nº MECANOGRAFICO',
+                    'N.Âº Mec.': 'NÂº MECANOGRAFICO',
                     'Data' : 'DATA',
                     'E1': 'ENTRADA REAL',
-                    'Saída Real': 'SAÍDA REAL',
+                    'SaÃ­da Real': 'SAÃDA REAL',
                     'Entrada Prevista': 'ENTRADA PREVISTA',
-                    'Saída Prevista': 'SAÍDA PREVISTA'
+                    'SaÃ­da Prevista': 'SAÃDA PREVISTA'
                 }, inplace=True)
                 
                 # Formatar a coluna 'Data' para 'YYYY-MM-DD'
@@ -578,6 +578,6 @@ if uploaded_file is not None:
 
 
     else:
-        st.error("DF vazio ou não processado.")
+        st.error("DF vazio ou nÃ£o processado.")
 else:
     st.info("Carregue um ficheiro na barra lateral, por favor.")
