@@ -3,3 +3,4 @@ openai
 plotly
 seaborn
 streamlit-aggrid
+lxml
