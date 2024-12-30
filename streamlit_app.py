@@ -24,6 +24,17 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+import streamlit_authenticator as stauth
+import os
+
+# ====================== CONFIG STREAMLIT ======================
+st.set_page_config(
+    page_title="Centro de Medicina Física e Reabilitação",
+    page_icon="👥",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 # ====================== AUTENTICAÇÃO ==========================
 # Definir o dicionário de credenciais a partir das variáveis de ambiente
 credentials = {
@@ -44,7 +55,6 @@ for user_id in user_ids:
         }
 
 # Depuração Temporária para Verificar Credenciais
-# Remova ou comente essas linhas após confirmar que as credenciais estão corretas
 st.write("Credenciais Carregadas:", credentials)
 st.write("Username:", os.getenv("USER1_USERNAME"))
 st.write("Name:", os.getenv("USER1_NAME"))
@@ -52,7 +62,7 @@ st.write("Hashed Password:", os.getenv("USER1_PASSWORD"))
 
 # Verifique se o dicionário de credenciais não está vazio
 if not credentials["usernames"]:
-    st.error("Nenhuma credencial encontrada. Verifique o arquivo .env ou os Secrets do Streamlit Cloud.")
+    st.error("Nenhuma credencial encontrada. Verifique os Secrets do Streamlit Cloud.")
     st.stop()
 
 # Configurações do Authenticator a partir das variáveis de ambiente
