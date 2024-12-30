@@ -30,8 +30,8 @@ credentials = {
     "usernames": {}
 }
 
-# Lista de identificadores de usuários (adicione mais conforme necessário)
-user_ids = ["USER1"]  # Adicione "USER2", "USER3", etc., conforme necessário
+# Lista de identificadores de usuários
+user_ids = ["USER1"] 
 
 for user_id in user_ids:
     username = os.getenv(f"{user_id}_USERNAME")
@@ -43,6 +43,11 @@ for user_id in user_ids:
             "password": hashed_password
         }
 
+# Verifique se o dicionário de credenciais não está vazio
+if not credentials["usernames"]:
+    st.error("Nenhuma credencial encontrada. Verifique o arquivo .env.")
+    st.stop()
+
 # Configurações do Authenticator a partir das variáveis de ambiente
 authenticator = stauth.Authenticate(
     credentials,
@@ -51,13 +56,18 @@ authenticator = stauth.Authenticate(
     cookie_expiry_days=int(os.getenv("AUTH_COOKIE_EXPIRY", "30"))
 )
 
+# Autenticação
 name, authentication_status, username = authenticator.login("Login", "main")
+
+# Depuração Temporária (Remover após resolver)
+st.write("Credenciais Carregadas:", credentials)
+st.write("Chamada de login com localização:", "main")
 
 if authentication_status:
     authenticator.logout("Logout", "sidebar")
     st.sidebar.write(f"Bem-vindo *{name}*")
-
-
+    
+    # ====================== HEADER ======================
     st.markdown(
         """<div style='text-align: center;'>
         <img src='https://www.cm-barcelos.pt/wp-content/uploads/2018/12/santa-casa23.jpg'
@@ -122,7 +132,6 @@ if authentication_status:
             return None
 
     def obter_saida_real(linha):
-        import pandas as pd
         # Coletar todas as possíveis saídas
         saidas = []
         for col in ['E1','E2','E3','E4','S1','S2','S3','S4']:
@@ -134,8 +143,6 @@ if authentication_status:
             return '00:00'
 
         # Converter strings p/ datetime no mesmo dia
-        # e pegar a "maior" (i.e. a mais tarde).
-        # Como não temos a data exata nesse momento, forçamos só HH:MM:
         saida_times = pd.to_datetime(saidas, format="%H:%M", errors='coerce')
         maior_saida = max(saida_times)
 
@@ -495,7 +502,7 @@ if authentication_status:
                     df_merged['Dias em Cumprimento'] = df_merged['Dias em Cumprimento'].astype(int)
                     df_merged['Dias Trabalhados'] = df_merged['Dias Trabalhados'].astype(int)
 
-                    
+
                     df_detalhamento = df_merged[['Nome', 'N.º Mec.', 'Dias em Cumprimento', 'Dias Trabalhados', 'Percentagem_Cumprimento']].copy()
         
                     # Renomear as colunas para melhor legibilidade
