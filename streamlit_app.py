@@ -19,33 +19,33 @@ load_dotenv()  # Carrega as variáveis do .env para o ambiente
 # ====================== CONFIG STREAMLIT ======================
 st.set_page_config(
     page_title="Centro de Medicina Física e Reabilitação",
-    page_icon="??",
+    page_icon="👥",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # ====================== AUTENTICAÇÃO ==========================
-names = []
-usernames = []
-hashed_passwords = []
+# Definir o dicionário de credenciais a partir das variáveis de ambiente
+credentials = {
+    "usernames": {}
+}
 
 # Lista de identificadores de usuários (adicione mais conforme necessário)
-user_ids = ["USER1"]  # Por exemplo, se você tiver mais usuários, adicione "USER2", "USER3", etc.
+user_ids = ["USER1"]  # Adicione "USER2", "USER3", etc., conforme necessário
 
 for user_id in user_ids:
     username = os.getenv(f"{user_id}_USERNAME")
     name = os.getenv(f"{user_id}_NAME")
     hashed_password = os.getenv(f"{user_id}_PASSWORD")
     if username and name and hashed_password:
-        names.append(name)
-        usernames.append(username)
-        hashed_passwords.append(hashed_password)
+        credentials["usernames"][username] = {
+            "name": name,
+            "password": hashed_password
+        }
 
 # Configurações do Authenticator a partir das variáveis de ambiente
 authenticator = stauth.Authenticate(
-    names,
-    usernames,
-    hashed_passwords,
+    credentials,
     os.getenv("AUTH_COOKIE_NAME", "dashboard_assiduidade"),
     os.getenv("AUTH_COOKIE_KEY", "abcdef"),
     cookie_expiry_days=int(os.getenv("AUTH_COOKIE_EXPIRY", "30"))
