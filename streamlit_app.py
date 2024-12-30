@@ -8,6 +8,40 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import matplotlib.patches as mpatches
+import bcrypt  # Importa bcrypt para verificação de senha
+
+# ====================== FUNÇÃO DE AUTENTICAÇÃO ======================
+def check_password():
+    """
+    Verifica as credenciais do usuário.
+    Retorna True se autenticado, caso contrário False.
+    """
+    if 'logged_in' not in st.session_state:
+        st.session_state['logged_in'] = False
+
+    if not st.session_state['logged_in']:
+        st.sidebar.header("🔒 Login")
+        username = st.sidebar.text_input("Usuário")
+        password = st.sidebar.text_input("Senha", type="password")
+        login_button = st.sidebar.button("Entrar")
+
+        if login_button:
+            if username == st.secrets["USER1_USERNAME"]:
+                # Verifica a senha usando bcrypt
+                hashed_password = st.secrets["USER1_PASSWORD"].encode('utf-8')
+                if bcrypt.checkpw(password.encode('utf-8'), hashed_password):
+                    st.session_state['logged_in'] = True
+                    st.sidebar.success(f"Bem-vindo, {st.secrets['USER1_NAME']}!")
+                else:
+                    st.sidebar.error("Senha incorreta.")
+            else:
+                st.sidebar.error("Nome de usuário incorreto.")
+
+    return st.session_state['logged_in']
+
+# Chama a função de verificação no início do app
+if not check_password():
+    st.stop()
 
 # ====================== CONFIG STREAMLIT ======================
 st.set_page_config(
