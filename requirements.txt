@@ -4,3 +4,6 @@ plotly
 seaborn
 streamlit-aggrid
 lxml
+streamlit-authenticator 
+python-dotenv 
+bcrypt
