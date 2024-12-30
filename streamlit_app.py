@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 import os
 
 # ====================== CARREGAR VARIÁVEIS DE AMBIENTE ======================
-load_dotenv()  # Carrega as variáveis do .env para o ambiente
+load_dotenv()  
 
 # ====================== CONFIG STREAMLIT ======================
 st.set_page_config(
