@@ -14,7 +14,14 @@ st.set_page_config(
     page_title="Centro de Medicina Física e Reabilitação",
     page_icon="??",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    theme={
+        "primaryColor": "#003366",
+        "backgroundColor": "#FFFFFF",
+        "secondaryBackgroundColor": "#F0F2F6",
+        "textColor": "#333333",
+        "font": "Arial"
+    }
 )
 st.markdown(
     """<div style='text-align: center;'>
