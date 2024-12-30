@@ -379,6 +379,49 @@ if uploaded_file is not None:
                 c5.metric("Incumprimentos", incumprimentos.shape[0])
                 c6.metric("Percentagem de Assiduidade", f"{cumprimento_por_func['Percentual_Cumprimento'].mean():.2f}%")
                 
+                
+                
+                # Criar coluna 'Status'
+                def determinar_status(row):
+                    turno_val = row.get('Turnos Previstos', '')
+                    cumpriu = row.get('Cumpriu Horário', False)
+                    data = row.get('Data', None)
+                    
+                    if isinstance(data, pd.Timestamp):
+                        is_saturday = data.weekday() == 5
+                        is_sunday = data.weekday() == 6
+                    else:
+                        is_saturday = False
+                        is_sunday = False
+                    
+                    # Nova Regra: Se for sábado ou domingo e 'Turnos Previstos' estiver vazio ou NaN
+                    if (is_saturday or is_sunday):
+                        if pd.isna(turno_val) or str(turno_val).strip() == '':
+                            return 'DC'
+                    
+                    # Converter 'Turnos Previstos' para string somente se não for NaN
+                    if pd.notna(turno_val):
+                        turno = str(turno_val).lower()
+                    else:
+                        turno = ''
+                    
+                    # Regras existentes
+                    if 'fe' in turno:
+                        return 'FE'
+                    elif 'bm' in turno:
+                        return 'BM'
+                    elif 'lp' in turno:
+                        return 'LP'
+                    elif 'dc' in turno and (is_saturday or is_sunday):
+                        return 'DC'
+                    elif cumpriu:
+                        return 'Cumprimento'
+                    else:
+                        return 'Incumprimento'
+
+                df_trabalho['Status'] = df_trabalho.apply(determinar_status, axis=1)
+                
+               
             with tab2:
                 st.markdown("### Detalhamento por Colaborador")
                 mask_working = df_trabalho['Status'].isin(['Cumprimento', 'Incumprimento'])
