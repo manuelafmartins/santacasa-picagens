@@ -25,33 +25,32 @@ st.set_page_config(
 )
 
 # ====================== AUTENTICAÇÃO ==========================
-# Definir usuários e senhas a partir das variáveis de ambiente
-users = {
-    "usernames": {}
-}
+names = []
+usernames = []
+hashed_passwords = []
 
-# Lista de usuários (aqui assumimos que são dois, mas pode expandir conforme necessário)
-user_ids = ["USER1"]
+# Lista de identificadores de usuários (adicione mais conforme necessário)
+user_ids = ["USER1"]  # Por exemplo, se você tiver mais usuários, adicione "USER2", "USER3", etc.
 
 for user_id in user_ids:
     username = os.getenv(f"{user_id}_USERNAME")
     name = os.getenv(f"{user_id}_NAME")
     hashed_password = os.getenv(f"{user_id}_PASSWORD")
     if username and name and hashed_password:
-        users["usernames"][username] = {
-            "name": name,
-            "password": hashed_password
-        }
+        names.append(name)
+        usernames.append(username)
+        hashed_passwords.append(hashed_password)
 
 # Configurações do Authenticator a partir das variáveis de ambiente
 authenticator = stauth.Authenticate(
-    users,
+    names,
+    usernames,
+    hashed_passwords,
     os.getenv("AUTH_COOKIE_NAME", "dashboard_assiduidade"),
     os.getenv("AUTH_COOKIE_KEY", "abcdef"),
     cookie_expiry_days=int(os.getenv("AUTH_COOKIE_EXPIRY", "30"))
 )
 
-# Autenticação
 name, authentication_status, username = authenticator.login("Login", "main")
 
 if authentication_status:
@@ -550,10 +549,7 @@ if authentication_status:
     else:
         st.info("Carregue um ficheiro na barra lateral, por favor.")
 
-else:
-    if authentication_status == False:
-        st.error("Usuário ou senha incorretos")
-    elif authentication_status == None:
-        st.warning("Por favor, insira seu nome de usuário e senha")
-    # Mensagens ou conteúdos específicos para não autenticados
-    st.info("Carregue um ficheiro na barra lateral, por favor.")
+elif authentication_status == False:
+    st.error("Usuário ou senha incorretos")
+elif authentication_status == None:
+    st.warning("Por favor, insira seu nome de usuário e senha")
