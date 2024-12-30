@@ -10,6 +10,14 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 import matplotlib.patches as mpatches
 import bcrypt  # Importa bcrypt para verificação de senha
 
+# ====================== CONFIG STREAMLIT ======================
+st.set_page_config(
+    page_title="Centro de Medicina Física e Reabilitação",
+    page_icon="👥",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 # ====================== FUNÇÃO DE AUTENTICAÇÃO ======================
 def check_password():
     """
@@ -43,13 +51,7 @@ def check_password():
 if not check_password():
     st.stop()
 
-# ====================== CONFIG STREAMLIT ======================
-st.set_page_config(
-    page_title="Centro de Medicina Física e Reabilitação",
-    page_icon="??",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+
 st.markdown(
     """<div style='text-align: center;'>
        <img src='https://www.cm-barcelos.pt/wp-content/uploads/2018/12/santa-casa23.jpg'
