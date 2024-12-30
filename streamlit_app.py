@@ -9,12 +9,12 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import matplotlib.patches as mpatches
 import streamlit_authenticator as stauth
-import bcrypt
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # Útil para desenvolvimento local
 import os
 
 # ====================== CARREGAR VARIÁVEIS DE AMBIENTE ======================
-load_dotenv()  
+# No ambiente de produção (Streamlit Cloud), os Secrets já estão carregados como variáveis de ambiente
+load_dotenv()  # Ainda pode ser útil para desenvolvimento local
 
 # ====================== CONFIG STREAMLIT ======================
 st.set_page_config(
@@ -31,7 +31,7 @@ credentials = {
 }
 
 # Lista de identificadores de usuários
-user_ids = ["USER1"] 
+user_ids = ["USER1"]  # Adicione "USER2", "USER3", etc., conforme necessário
 
 for user_id in user_ids:
     username = os.getenv(f"{user_id}_USERNAME")
@@ -43,9 +43,16 @@ for user_id in user_ids:
             "password": hashed_password
         }
 
+# Depuração Temporária para Verificar Credenciais
+# Remova ou comente essas linhas após confirmar que as credenciais estão corretas
+st.write("Credenciais Carregadas:", credentials)
+st.write("Username:", os.getenv("USER1_USERNAME"))
+st.write("Name:", os.getenv("USER1_NAME"))
+st.write("Hashed Password:", os.getenv("USER1_PASSWORD"))
+
 # Verifique se o dicionário de credenciais não está vazio
 if not credentials["usernames"]:
-    st.error("Nenhuma credencial encontrada. Verifique o arquivo .env.")
+    st.error("Nenhuma credencial encontrada. Verifique o arquivo .env ou os Secrets do Streamlit Cloud.")
     st.stop()
 
 # Configurações do Authenticator a partir das variáveis de ambiente
@@ -58,10 +65,6 @@ authenticator = stauth.Authenticate(
 
 # Autenticação
 name, authentication_status, username = authenticator.login("Login", "main")
-
-# Depuração Temporária (Remover após resolver)
-st.write("Credenciais Carregadas:", credentials)
-st.write("Chamada de login com localização:", "main")
 
 if authentication_status:
     authenticator.logout("Logout", "sidebar")
