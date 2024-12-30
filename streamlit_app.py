@@ -331,7 +331,7 @@ if uploaded_file is not None:
             df_final['Saída Real'] = df_final.apply(obter_saida_real, axis=1)
 
             # Exibir DataFrame final para depuração
-            st.write("### DataFrame Final com Horários Previsto e Real")
+            st.write("### Tabela com todos os registos:")
             st.dataframe(df_final)
 
             # 3) Dias Possíveis (sem domingo, sem ausências, sem exigir picagem)
@@ -379,122 +379,6 @@ if uploaded_file is not None:
                 c5.metric("Incumprimentos", incumprimentos.shape[0])
                 c6.metric("Percentagem de Assiduidade", f"{cumprimento_por_func['Percentual_Cumprimento'].mean():.2f}%")
                 
-                # Heatmap de Assiduidade Diária
-                st.markdown("### Status Diário")
-                
-                # Criar coluna 'Status'
-                def determinar_status(row):
-                    turno_val = row.get('Turnos Previstos', '')
-                    cumpriu = row.get('Cumpriu Horário', False)
-                    data = row.get('Data', None)
-                    
-                    if isinstance(data, pd.Timestamp):
-                        is_saturday = data.weekday() == 5
-                        is_sunday = data.weekday() == 6
-                    else:
-                        is_saturday = False
-                        is_sunday = False
-                    
-                    # Nova Regra: Se for sábado ou domingo e 'Turnos Previstos' estiver vazio ou NaN
-                    if (is_saturday or is_sunday):
-                        if pd.isna(turno_val) or str(turno_val).strip() == '':
-                            return 'DC'
-                    
-                    # Converter 'Turnos Previstos' para string somente se não for NaN
-                    if pd.notna(turno_val):
-                        turno = str(turno_val).lower()
-                    else:
-                        turno = ''
-                    
-                    # Regras existentes
-                    if 'fe' in turno:
-                        return 'FE'
-                    elif 'bm' in turno:
-                        return 'BM'
-                    elif 'lp' in turno:
-                        return 'LP'
-                    elif 'dc' in turno and (is_saturday or is_sunday):
-                        return 'DC'
-                    elif cumpriu:
-                        return 'Cumprimento'
-                    else:
-                        return 'Incumprimento'
-
-                df_trabalho['Status'] = df_trabalho.apply(determinar_status, axis=1)
-                
-                # Criar tabela pivot para o heatmap
-                heatmap_data = df_trabalho.pivot_table(index='Nome', columns='Data', values='Status', aggfunc='first')
-                
-                # Garantir que as datas estão no formato 'YYYY-MM-DD' e ordenadas
-                heatmap_data.columns = pd.to_datetime(heatmap_data.columns).strftime('%Y-%m-%d')
-                heatmap_data = heatmap_data.reindex(sorted(heatmap_data.columns), axis=1)
-                
-                # Definir mapeamento de cores
-                status_colors = {
-                    'Cumprimento': '#B4E5A2',     
-                    'FE': '#FEF6BE',              
-                    'BM': '#F2CFEE',              
-                    'LP': '#CAEEFB',              
-                    'DC': '#F2F2F2',              
-                    'Incumprimento': '#F6C6AD'    
-                }
-                
-                categories = ['Cumprimento', 'FE', 'BM', 'LP', 'DC', 'Incumprimento']
-                
-                status_mapping = {status: i for i, status in enumerate(categories, 1)}
-                
-                cmap = ListedColormap([status_colors[status] for status in categories])
-                bounds = list(range(1, len(categories)+2))  # [1,2,3,4,5,6,7]
-                norm = BoundaryNorm(bounds, cmap.N)
-                
-                # Mapear 'Status' para códigos numéricos
-                heatmap_data_num = heatmap_data.replace(status_mapping)
-                
-                # Plotar o heatmap
-                plt.figure(figsize=(20, max(6, len(heatmap_data_num)*0.5)))
-                sns.heatmap(heatmap_data_num, cmap=cmap, norm=norm, cbar=False, linewidths=.5, linecolor='gray')
-                
-                # Rotacionar labels do eixo x para melhor legibilidade
-                plt.xticks(rotation=90)
-                
-                # Criar a legenda com descrições completas
-                status_labels = {
-                    'Cumprimento': 'Cumprimento de Horário',
-                    'FE': 'Férias',
-                    'BM': 'Baixa Médica',
-                    'LP': 'Licença de Parentalidade',
-                    'DC': 'Descanso',
-                    'Incumprimento': 'Incumprimento de Horário'
-                }
-                legend_elements = [
-                    mpatches.Patch(
-                        facecolor=status_colors[status],
-                        edgecolor='gray',
-                        label=f"{status} ({status_labels[status]})"
-                    ) for status in categories
-                ]
-                plt.legend(
-                    handles=legend_elements,
-                    bbox_to_anchor=(1.05, 1),
-                    loc='upper left',
-                    borderaxespad=0.
-                )
-                
-                # Ajustar layout para evitar sobreposição
-                plt.tight_layout()
-                
-                # Exibir o heatmap no Streamlit
-                st.pyplot(plt)
-                
-                # Download de Relatório
-                csv = df_merged.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    label="Download de Relatório CSV",
-                    data=csv,
-                    file_name='assiduidade_relatorio.csv',
-                    mime='text/csv',
-                )
-
             with tab2:
                 st.markdown("### Detalhamento por Colaborador")
                 mask_working = df_trabalho['Status'].isin(['Cumprimento', 'Incumprimento'])
@@ -574,8 +458,6 @@ if uploaded_file is not None:
                 
                 # Exibir o dataframe com estilo semelhante aos outros tabs
                 st.dataframe(incumprimentos)
-
-
 
     else:
         st.error("DF vazio ou não processado.")
