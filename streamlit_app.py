@@ -23,22 +23,14 @@ st.set_page_config(
         "font": "Arial"
     }
 )
-st.markdown("""
-    <style>
-        .big-font {
-            font-size:20px !important;
-            color: #003366;
-        }
-        .sub-font {
-            font-size:16px !important;
-            color: #6A6A6A;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-st.markdown("<p class='big-font'>Centro de Medicina Física e Reabilitação</p>", unsafe_allow_html=True)
-st.markdown("<p class='sub-font'>Dashboard de Assiduidade</p>", unsafe_allow_html=True)
-
+st.markdown(
+    """<div style='text-align: center;'>
+       <img src='https://www.cm-barcelos.pt/wp-content/uploads/2018/12/santa-casa23.jpg'
+       width='400'/></div>""",
+    unsafe_allow_html=True
+)
+st.markdown("<h1 style='text-align: center; color: #003366;'>Centro de Medicina Física e Reabilitação</h1>", unsafe_allow_html=True)
+st.markdown("<h4 style='text-align: center; color: #6A6A6A;'>Dashboard de Assiduidade</h4>", unsafe_allow_html=True)
 st.write("")
 
 # ====================== SIDEBAR ================================
