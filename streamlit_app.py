@@ -88,22 +88,17 @@ def carregar_dados(uploaded_file):
         return None
 
 def verificar_entrada_saida(linha, tolerancia_min=2):
-    ### MODIFICAÇÃO PARA FERIAIS (Fr)
-    # Se o trabalhador tem 'Fr' no turno, consideramos que ele NÃO pode ter incumprimento.
-    turno_lower = str(linha.get('Turnos Previstos','')).lower()
-    if "fr" in turno_lower:
-        return True  # Se é feriado p/ este colaborador, não marca incumprimento.
-
     entrada_prevista = to_time(str(linha.get('Entrada Prevista','00:00')))
     saida_prevista   = to_time(str(linha.get('Saída Prevista','00:00')))
     entrada_real     = to_time(str(linha.get('E1','00:00')))
     saida_real       = to_time(str(linha.get('Saída Real','00:00')))
-    
-    # Excluindo dias de "DC", "DO", "FE", "BM", "LP" (já tratados em outras partes),
-    # mas se quiser poderia checar aqui também.
-    
+    turno_lower = str(linha.get('Turnos Previstos','')).lower()
+    if "fr" in turno_lower:
+        return True  # Se é feriado p/ este colaborador, não marca incumprimento.
+
+    if any(x in turno_lower for x in ["dc", "do", "fe", "bm", "lp"]):
+        return True
     tol = timedelta(minutes=tolerancia_min)
-    
     # Caso 1: Entrada Real está '00:00' e Saída Real é válida
     if (entrada_real is None) or (entrada_real.strftime("%H:%M") == '00:00'):
         if saida_real and saida_real >= (saida_prevista - tol):
