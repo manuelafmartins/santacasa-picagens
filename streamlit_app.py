@@ -433,7 +433,12 @@ if uploaded_file is not None:
                         is_saturday = False
                         is_sunday = False
                     
-                    # Nova Regra: Se for sábado ou domingo e 'Turnos Previstos' estiver vazio ou NaN
+                    if pd.notna(turno_val):
+                        turno = str(turno_val).lower()
+                    else:
+                        turno = ''
+
+                    # Nova regra: se for fr, é feriado => sem incumprimento
                     if 'fr' in turno:
                         return 'Feriado'
                     elif (is_saturday or is_sunday):
@@ -441,7 +446,7 @@ if uploaded_file is not None:
                         if str(turno).strip() == '':
                             return 'DC'
                     
-                    # Regras existentes
+                    # Regras já existentes
                     if 'fe' in turno:
                         return 'FE'
                     elif 'bm' in turno:
