@@ -51,6 +51,7 @@ def check_password():
 if not check_password():
     st.stop()
 
+
 st.markdown(
     """<div style='text-align: center;'>
        <img src='https://www.cm-barcelos.pt/wp-content/uploads/2018/12/santa-casa23.jpg'
@@ -67,6 +68,7 @@ uploaded_file = st.sidebar.file_uploader("Carregar Ficheiro XLS", type=["xls","x
 tolerancia = st.sidebar.number_input("Minutos de Tolerância", min_value=0, max_value=60, value=2, step=1)
 
 # ====================== Funções Auxiliares ======================
+
 def carregar_dados(uploaded_file):
     try:
         dfs = pd.read_html(uploaded_file)
@@ -85,53 +87,55 @@ def carregar_dados(uploaded_file):
         st.error(f"Erro ao carregar o ficheiro: {e}")
         return None
 
-def to_time(hhmm):
-    try:
-        return datetime.strptime(hhmm, "%H:%M")
-    except:
-        return None
-
 def verificar_entrada_saida(linha, tolerancia_min=2):
     entrada_prevista = to_time(str(linha.get('Entrada Prevista','00:00')))
     saida_prevista   = to_time(str(linha.get('Saída Prevista','00:00')))
     entrada_real     = to_time(str(linha.get('E1','00:00')))
     saida_real       = to_time(str(linha.get('Saída Real','00:00')))
     turno_lower = str(linha.get('Turnos Previstos','')).lower()
-
-    # Se for feriado (Fr)
     if "fr" in turno_lower:
-        return True
-    # Se DC, DO, FE, BM, LP não é incumprimento
+        return True  # Se é feriado p/ este colaborador, não marca incumprimento.
+
     if any(x in turno_lower for x in ["dc", "do", "fe", "bm", "lp"]):
         return True
-
     tol = timedelta(minutes=tolerancia_min)
-
-    # Caso 1: Entrada Real não existe ou '00:00'
+    # Caso 1: Entrada Real está '00:00' e Saída Real é válida
     if (entrada_real is None) or (entrada_real.strftime("%H:%M") == '00:00'):
         if saida_real and saida_real >= (saida_prevista - tol):
             return True
         else:
             return False
-
-    # Caso 2: Entrada Real existe
+    # Caso 2: Entrada Real válida
     else:
         if (entrada_real <= (entrada_prevista + tol)) and (saida_real >= (saida_prevista - tol)):
             return True
         else:
             return False
 
+def to_time(hhmm):
+    try:
+        return datetime.strptime(hhmm, "%H:%M")
+    except:
+        return None
+
 def obter_saida_real(linha):
     import pandas as pd
+    # Coletar todas as possíveis saídas
     saidas = []
     for col in ['E1','E2','E3','E4','S1','S2','S3','S4']:
         val = linha.get(col, '00:00')
         if pd.notna(val) and val != '00:00':
             saidas.append(val)
+
     if not saidas:
         return '00:00'
+
+    # Converter strings p/ datetime no mesmo dia
+    # e pegar a "maior" (i.e. a mais tarde).
+    # Como não temos a data exata nesse momento, forçamos só HH:MM:
     saida_times = pd.to_datetime(saidas, format="%H:%M", errors='coerce')
     maior_saida = max(saida_times)
+
     return maior_saida.strftime("%H:%M")
 
 def calcular_metricas_basicas(df):
@@ -373,7 +377,8 @@ if uploaded_file is not None:
             df_base = filtrar_dias_possiveis(df_final)
             # 4) Dias Trabalhados (exige picagens/turno)
             df_trabalho = df_final.copy()
-            # df_trabalho = filtrar_dias_trabalho(df_final)
+            #df_trabalho = filtrar_dias_trabalho(df_final)
+
 
             # 5) Agrupamento: Dias Possíveis
             df_possible = df_base.groupby(['N.º Mec.', 'Nome'])['Data'].nunique().reset_index(name='Dias Possíveis')
@@ -385,6 +390,7 @@ if uploaded_file is not None:
 
             # 7) Verificação de cumprimento
             df_trabalho['Cumpriu Horário'] = df_trabalho.apply(lambda row: verificar_entrada_saida(row, tolerancia), axis=1)
+            test = df_trabalho.copy()
 
             # Definir 'incumprimentos' aqui
             incumprimentos = df_trabalho[df_trabalho['Cumpriu Horário'] == False][
@@ -411,29 +417,36 @@ if uploaded_file is not None:
                 c4.metric("Nº Registos", num_registos)
                 c5.metric("Incumprimentos", incumprimentos.shape[0])
                 c6.metric("Percentagem de Assiduidade", f"{cumprimento_por_func['Percentual_Cumprimento'].mean():.2f}%")
-
+                
+                
+                
+                # Criar coluna 'Status'
                 def determinar_status(row):
                     turno_val = row.get('Turnos Previstos', '')
                     cumpriu = row.get('Cumpriu Horário', False)
                     data = row.get('Data', None)
-
+                    
                     if isinstance(data, pd.Timestamp):
                         is_saturday = data.weekday() == 5
                         is_sunday = data.weekday() == 6
                     else:
                         is_saturday = False
                         is_sunday = False
-
+                    
                     if pd.notna(turno_val):
                         turno = str(turno_val).lower()
                     else:
                         turno = ''
 
-                    # Se for feriado
+                    # Nova regra: se for fr, é feriado => sem incumprimento
                     if 'fr' in turno:
                         return 'Feriado'
-                    elif (is_saturday or is_sunday) and (turno.strip() == ''):
-                        return 'DC'
+                    elif (is_saturday or is_sunday):
+                        # Se for sábado ou domingo e 'Turnos Previstos' vazio => DC
+                        if str(turno).strip() == '':
+                            return 'DC'
+                    
+                    # Regras já existentes
                     if 'fe' in turno:
                         return 'FE'
                     elif 'bm' in turno:
@@ -448,14 +461,16 @@ if uploaded_file is not None:
                         return 'Incumprimento'
 
                 df_trabalho['Status'] = df_trabalho.apply(determinar_status, axis=1)
-
+                
+               
             with tab2:
                 st.markdown("### Detalhamento por Colaborador")
                 mask_working = df_trabalho['Status'].isin(['Cumprimento', 'Incumprimento'])
                 df_worked = df_trabalho[mask_working]
-
+                # Agrupar por Nº Mec. e Nome para calcular dias em cumprimento e dias trabalhados
                 cumprimento_por_func = df_worked.groupby(['N.º Mec.', 'Nome'])['Cumpriu Horário'].agg(['sum', 'count']).reset_index()
 
+                # Renomear as colunas para melhor entendimento
                 cumprimento_por_func.rename(columns={
                     'sum': 'Dias em Cumprimento',
                     'count': 'Dias Trabalhados'
@@ -466,19 +481,23 @@ if uploaded_file is not None:
                     if row['Dias Trabalhados'] > 0 else '-', axis=1
                 )
 
+                # Ordenar por Percentagem de Cumprimento de forma decrescente
                 cumprimento_por_func.sort_values('Percentagem_Cumprimento', ascending=False, inplace=True)
-
+                # Mesclar df_possible com cumprimento_por_func
                 df_merged = pd.merge(df_possible, cumprimento_por_func, on=['N.º Mec.', 'Nome'], how='left').fillna({
                     'Dias em Cumprimento': 0,
                     'Dias Trabalhados': 0,
                     'Percentagem_Cumprimento': '-'
                 })
 
+                # Garantir que os tipos de dados estejam corretos
                 df_merged['Dias em Cumprimento'] = df_merged['Dias em Cumprimento'].astype(int)
                 df_merged['Dias Trabalhados'] = df_merged['Dias Trabalhados'].astype(int)
 
+                
                 df_detalhamento = df_merged[['Nome', 'N.º Mec.', 'Dias em Cumprimento', 'Dias Trabalhados', 'Percentagem_Cumprimento']].copy()
-
+    
+                # Renomear as colunas para melhor legibilidade
                 df_detalhamento.rename(columns={
                     'Nome': 'NOME',
                     'N.º Mec.': 'Nº MECANOGRAFICO',
@@ -486,61 +505,43 @@ if uploaded_file is not None:
                     'Dias Trabalhados': 'TOTAL DE DIAS DE TRABALHO',
                     'Percentagem_Cumprimento': 'PERCENTAGEM DE CUMPRIMENTO'
                 }, inplace=True)
-
+                
+                # Garantir que o DataFrame está ordenado pelo 'NOME' de forma ascendente e resetar o índice
                 df_detalhamento = df_detalhamento.sort_values(by='NOME', ascending=True).reset_index(drop=True)
+                
+                # Substituir valores NaN ou infinidades por '-'
                 df_detalhamento['PERCENTAGEM DE CUMPRIMENTO'] = df_detalhamento['PERCENTAGEM DE CUMPRIMENTO'].replace({'nan': '-', 'inf': '-', '-': '-'})
-
+                
+                # Exibir o DataFrame
                 st.dataframe(df_detalhamento)
 
-            # ================= ABA 3: Detalhe dos Incumprimentos =================
             with tab3:
                 st.markdown("### Detalhes de Incumprimentos")
-
-                # 1) Vamos criar/incorporar a lógica de eliminar/apagar registos
-                #    Mas antes, renomeamos colunas como você já fazia:
+                
+                # Selecionar as colunas relevantes e remover 'Turnos Previstos'
                 incumprimentos = df_trabalho[df_trabalho['Cumpriu Horário'] == False][
                     ['N.º Mec.', 'Nome', 'Data', 'E1', 'Saída Real', 'Entrada Prevista', 'Saída Prevista']
                 ].copy()
-
+                
+                # Renomear as colunas para uma formatação consistente
                 incumprimentos.rename(columns={
                     'Nome': 'NOME',
                     'N.º Mec.': 'Nº MECANOGRAFICO',
-                    'Data': 'DATA',
+                    'Data' : 'DATA',
                     'E1': 'ENTRADA REAL',
                     'Saída Real': 'SAÍDA REAL',
                     'Entrada Prevista': 'ENTRADA PREVISTA',
                     'Saída Prevista': 'SAÍDA PREVISTA'
                 }, inplace=True)
-
+                
+                # Formatar a coluna 'Data' para 'YYYY-MM-DD'
                 incumprimentos['DATA'] = pd.to_datetime(incumprimentos['DATA']).dt.strftime('%Y-%m-%d')
+                
+                # Ordenar o dataframe por 'NOME' de forma ascendente
                 incumprimentos = incumprimentos.sort_values(by='NOME').reset_index(drop=True)
-
-                # 2) Se ainda não estiver em session_state, inicializamos
-                if "df_incumprimentos" not in st.session_state:
-                    st.session_state["df_incumprimentos"] = incumprimentos.copy()
-
-                st.write("Marque 'Eliminar' nas linhas que deseja excluir e clique no botão:")
-
-                # 3) Adicionamos a coluna "Eliminar" se ainda não existir
-                if "Eliminar" not in st.session_state["df_incumprimentos"].columns:
-                    st.session_state["df_incumprimentos"]["Eliminar"] = False
-
-                # 4) Exibir em modo edição
-                df_editado = st.data_editor(
-                    st.session_state["df_incumprimentos"],
-                    num_rows="dynamic",
-                    use_container_width=True
-                )
-
-                # 5) Botão para efetivar exclusão
-                if st.button("Aplicar Exclusão"):
-                    df_filtrado = df_editado[df_editado["Eliminar"] == False].copy()
-                    st.session_state["df_incumprimentos"] = df_filtrado
-                    st.success("Linhas eliminadas com sucesso!")
-
-                # 6) Exibir resultado final (já filtrado)
-                st.write("**Incumprimentos Pendentes**:")
-                st.dataframe(st.session_state["df_incumprimentos"])
+                
+                # Exibir o dataframe com estilo semelhante aos outros tabs
+                st.dataframe(incumprimentos)
 
     else:
         st.error("DF vazio ou não processado.")
