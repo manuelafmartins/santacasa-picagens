@@ -484,10 +484,6 @@ if st.session_state.get("dashboard_gerado", False):
         assid_mean = cumprimento_por_func['Percentual_Cumprimento'].mean()
         c6.metric("Percentagem de Assiduidade", f"{assid_mean:.2f}%" if pd.notna(assid_mean) else "-")
 
-        # Exemplo de exibir a tabela final
-        st.write("### Tabela completa (df_final):")
-        st.dataframe(df_final)
-
     with tab2:
         st.markdown("### Detalhamento por Colaborador")
 
