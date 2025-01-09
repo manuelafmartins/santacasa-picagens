@@ -515,33 +515,43 @@ if uploaded_file is not None:
                 # Exibir o DataFrame
                 st.dataframe(df_detalhamento)
 
+            # No bloco do tab3 (ou onde quiser exibir e gerenciar as falhas):
             with tab3:
                 st.markdown("### Detalhes de Incumprimentos")
-                
-                # Selecionar as colunas relevantes e remover 'Turnos Previstos'
-                incumprimentos = df_trabalho[df_trabalho['Cumpriu Horário'] == False][
-                    ['N.º Mec.', 'Nome', 'Data', 'E1', 'Saída Real', 'Entrada Prevista', 'Saída Prevista']
-                ].copy()
-                
-                # Renomear as colunas para uma formatação consistente
-                incumprimentos.rename(columns={
-                    'Nome': 'NOME',
-                    'N.º Mec.': 'Nº MECANOGRAFICO',
-                    'Data' : 'DATA',
-                    'E1': 'ENTRADA REAL',
-                    'Saída Real': 'SAÍDA REAL',
-                    'Entrada Prevista': 'ENTRADA PREVISTA',
-                    'Saída Prevista': 'SAÍDA PREVISTA'
-                }, inplace=True)
-                
-                # Formatar a coluna 'Data' para 'YYYY-MM-DD'
-                incumprimentos['DATA'] = pd.to_datetime(incumprimentos['DATA']).dt.strftime('%Y-%m-%d')
-                
-                # Ordenar o dataframe por 'NOME' de forma ascendente
-                incumprimentos = incumprimentos.sort_values(by='NOME').reset_index(drop=True)
-                
-                # Exibir o dataframe com estilo semelhante aos outros tabs
-                st.dataframe(incumprimentos)
+
+                # 1) Se ainda não existir nada no session_state, cria a partir do DataFrame atual
+                if "df_incumprimentos" not in st.session_state:
+                    st.session_state["df_incumprimentos"] = incumprimentos.copy()
+
+                st.write("""
+                Selecione as linhas que quer eliminar (ou que já foram resolvidas) 
+                e depois clique no botão "Aplicar Exclusão".
+                """)
+
+                # 2) Para permitir marcar/desmarcar, criamos uma coluna booleana:
+                #    Dê o nome que preferir, por exemplo "Eliminar" ou "Resolvido"
+                #    Se já existir, não precisa recriar
+                if "Eliminar" not in st.session_state["df_incumprimentos"].columns:
+                    st.session_state["df_incumprimentos"]["Eliminar"] = False
+
+                # 3) Exibe DataFrame em modo "data_editor" para o usuário marcar a coluna "Eliminar"
+                df_editado = st.data_editor(
+                    st.session_state["df_incumprimentos"],
+                    use_container_width=True,
+                    num_rows="dynamic"
+                )
+
+                # 4) Botão para efetivamente filtrar as linhas
+                if st.button("Aplicar Exclusão"):
+                    # Filtra as linhas onde "Eliminar" == False (ou seja, não resolvidas/pendentes)
+                    df_filtrado = df_editado[df_editado["Eliminar"] == False].copy()
+                    # Atualiza o session_state
+                    st.session_state["df_incumprimentos"] = df_filtrado
+                    st.success("Linhas eliminadas com sucesso!")
+
+                # 5) Exibe o resultado filtrado
+                st.dataframe(st.session_state["df_incumprimentos"])
+
 
     else:
         st.error("DF vazio ou não processado.")
