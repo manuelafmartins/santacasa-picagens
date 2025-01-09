@@ -93,6 +93,9 @@ def verificar_entrada_saida(linha, tolerancia_min=2):
     entrada_real     = to_time(str(linha.get('E1','00:00')))
     saida_real       = to_time(str(linha.get('Saída Real','00:00')))
     turno_lower = str(linha.get('Turnos Previstos','')).lower()
+    if "fr" in turno_lower:
+        return True  # Se é feriado p/ este colaborador, não marca incumprimento.
+
     if any(x in turno_lower for x in ["dc", "do", "fe", "bm", "lp"]):
         return True
     tol = timedelta(minutes=tolerancia_min)
@@ -431,15 +434,12 @@ if uploaded_file is not None:
                         is_sunday = False
                     
                     # Nova Regra: Se for sábado ou domingo e 'Turnos Previstos' estiver vazio ou NaN
-                    if (is_saturday or is_sunday):
-                        if pd.isna(turno_val) or str(turno_val).strip() == '':
+                    if 'fr' in turno:
+                        return 'Feriado'
+                    elif (is_saturday or is_sunday):
+                        # Se for sábado ou domingo e 'Turnos Previstos' vazio => DC
+                        if str(turno).strip() == '':
                             return 'DC'
-                    
-                    # Converter 'Turnos Previstos' para string somente se não for NaN
-                    if pd.notna(turno_val):
-                        turno = str(turno_val).lower()
-                    else:
-                        turno = ''
                     
                     # Regras existentes
                     if 'fe' in turno:
