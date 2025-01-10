@@ -547,7 +547,6 @@ if uploaded_file is not None:
             with tab3:
                 st.markdown("### Detalhes de Incumprimentos")
 
-                # Montamos novamente o DF de incumprimentos, mas agora consultando df_trabalho
                 incumprimentos = df_trabalho[df_trabalho['Cumpriu Horário'] == False][
                     ['N.º Mec.', 'Nome', 'Data', 'E1', 'Saída Real', 'Entrada Prevista', 'Saída Prevista']
                 ].copy()
@@ -565,23 +564,14 @@ if uploaded_file is not None:
                 incumprimentos['DATA'] = pd.to_datetime(incumprimentos['DATA']).dt.strftime('%Y-%m-%d')
                 incumprimentos = incumprimentos.sort_values(by='NOME').reset_index(drop=True)
 
-                # Se não existir no session_state, criamos
                 if 'df_incs' not in st.session_state:
                     incumprimentos['DESCARTAR'] = False
                     st.session_state['df_incs'] = incumprimentos
                 else:
-                    # Caso já exista, garantimos que as colunas sejam as mesmas
-                    # e atualizamos a lista de incumprimentos, se necessário.
-                    # Para simplificar, sobrescrevemos 'df_incs' atual com as
-                    # novas linhas + colunas (você pode personalizar se quiser).
                     novos_incs = incumprimentos[['Nº MECANOGRAFICO','NOME','DATA','ENTRADA REAL','SAÍDA REAL','ENTRADA PREVISTA','SAÍDA PREVISTA']]
-                    # Merge ou concat? Depende. Se quiser só substituir:
-                    # Verificar se a coluna DESCARTAR já existe:
                     if 'DESCARTAR' not in st.session_state['df_incs'].columns:
                         st.session_state['df_incs']['DESCARTAR'] = False
 
-                    # Agora, tentamos juntar pelo 'Nº MECANOGRAFICO' + 'DATA' ou algo do tipo...
-                    # Simples: sobrescrevemos completamente (exemplo):
                     novos_incs['DESCARTAR'] = False
                     st.session_state['df_incs'] = novos_incs
 
@@ -591,19 +581,22 @@ if uploaded_file is not None:
                     use_container_width=True
                 )
 
-                # Atualizamos session_state com o que foi editado
                 st.session_state['df_incs'] = df_incs_editor
 
-                st.write("#### Linhas marcadas para descarte:")
+                st.write("#### Linhas marcadas para descartar:")
                 descartados = df_incs_editor[df_incs_editor['DESCARTAR'] == True]
                 st.dataframe(descartados)
 
-                if st.button("Aplicar Descarte"):
+                if st.button("Submeter"):
                     df_incs_remanescentes = df_incs_editor[df_incs_editor['DESCARTAR'] == False].copy()
                     st.session_state['df_incs'] = df_incs_remanescentes
                     st.success("Linhas marcadas como descartadas foram removidas da lista de incumprimentos!")
 
-                    st.write("### Incumprimentos após descarte:")
+                    
+                    if 'DESCARTAR' in df_incs_remanescentes.columns:
+                        df_incs_remanescentes = df_incs_remanescentes.drop(columns=['DESCARTAR'])
+
+                    st.write("### Incumprimentos após Análise:")
                     st.dataframe(df_incs_remanescentes)
 
     else:
