@@ -517,31 +517,50 @@ if uploaded_file is not None:
 
             with tab3:
                 st.markdown("### Detalhes de Incumprimentos")
-                
-                # Selecionar as colunas relevantes e remover 'Turnos Previstos'
+
                 incumprimentos = df_trabalho[df_trabalho['Cumpriu Horário'] == False][
                     ['N.º Mec.', 'Nome', 'Data', 'E1', 'Saída Real', 'Entrada Prevista', 'Saída Prevista']
                 ].copy()
-                
-                # Renomear as colunas para uma formatação consistente
+
                 incumprimentos.rename(columns={
                     'Nome': 'NOME',
                     'N.º Mec.': 'Nº MECANOGRAFICO',
-                    'Data' : 'DATA',
+                    'Data': 'DATA',
                     'E1': 'ENTRADA REAL',
                     'Saída Real': 'SAÍDA REAL',
                     'Entrada Prevista': 'ENTRADA PREVISTA',
                     'Saída Prevista': 'SAÍDA PREVISTA'
                 }, inplace=True)
-                
-                # Formatar a coluna 'Data' para 'YYYY-MM-DD'
+
                 incumprimentos['DATA'] = pd.to_datetime(incumprimentos['DATA']).dt.strftime('%Y-%m-%d')
-                
-                # Ordenar o dataframe por 'NOME' de forma ascendente
+
                 incumprimentos = incumprimentos.sort_values(by='NOME').reset_index(drop=True)
-                
-                # Exibir o dataframe com estilo semelhante aos outros tabs
-                st.dataframe(incumprimentos)
+
+                if 'df_incs' not in st.session_state:
+                    incumprimentos['DESCARTAR'] = False
+                    st.session_state['df_incs'] = incumprimentos
+                else:
+                    incumprimentos = st.session_state['df_incs']
+
+                df_editavel_incs = st.data_editor(
+                    incumprimentos, 
+                    key='df_incs_editor', 
+                    use_container_width=True
+                )
+
+                st.session_state['df_incs'] = df_editavel_incs
+
+                st.write("#### Linhas marcadas para descarte:")
+                st.dataframe(df_editavel_incs[df_editavel_incs['DESCARTAR'] == True])
+
+                if st.button("Aplicar Descarte"):
+                    df_incs_remanescentes = df_editavel_incs[df_editavel_incs['DESCARTAR'] == False].copy()
+
+                    st.session_state['df_incs'] = df_incs_remanescentes
+                    st.success("Linhas marcadas como descartadas foram removidas da lista de incumprimentos!")
+
+                    st.write("### Incumprimentos após descarte:")
+                    st.dataframe(df_incs_remanescentes)
 
     else:
         st.error("DF vazio ou não processado.")
