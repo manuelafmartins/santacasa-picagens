@@ -418,7 +418,7 @@ if uploaded_file is not None:
             # 3) Dias Possíveis (sem domingo, sem ausências, sem exigir picagem)
             df_base = filtrar_dias_possiveis(df_final)
             # 4) Dias Trabalhados
-            df_trabalho = df_final.copy()
+            df_trabalho = filtrar_dias_trabalho(df_final)
 
             # 5) Agrupamento: Dias Possíveis
             df_possible = df_base.groupby(['N.º Mec.', 'Nome'])['Data'].nunique().reset_index(name='Dias Possíveis')
