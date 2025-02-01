@@ -442,16 +442,6 @@ if uploaded_file is not None:
             df_merged['Dias Possíveis'] = df_merged['Dias Possíveis'].astype(int)
             df_merged['Dias Trabalhados'] = df_merged['Dias Trabalhados'].astype(int)
 
-            df_merged = pd.merge(
-                df_merged, 
-                df_dias_com_picagem, 
-                on=['N.º Mec.', 'Nome'], 
-                how='left'
-            ).fillna({'Dias com Picagem': 0})
-
-            df_merged['Dias com Picagem'] = df_merged['Dias com Picagem'].astype(int)
-
-
             # 7) Verificação de cumprimento
             df_trabalho['Cumpriu Horário'] = df_trabalho.apply(lambda row: verificar_entrada_saida(row, tolerancia), axis=1)
 
@@ -554,6 +544,15 @@ if uploaded_file is not None:
 
                 df_merged['Dias em Cumprimento'] = df_merged['Dias em Cumprimento'].astype(int)
                 df_merged['Dias Trabalhados'] = df_merged['Dias Trabalhados'].astype(int)
+                df_merged = pd.merge(
+                    df_merged, 
+                    df_dias_com_picagem, 
+                    on=['N.º Mec.', 'Nome'], 
+                    how='left'
+                ).fillna({'Dias com Picagem': 0})
+
+                df_merged['Dias com Picagem'] = df_merged['Dias com Picagem'].astype(int)
+
 
                 df_detalhamento = df_merged[['Nome', 'N.º Mec.', 'Dias em Cumprimento', 'Dias Trabalhados', 'Dias com Picagem', 'Percentagem_Cumprimento']].copy()
 
