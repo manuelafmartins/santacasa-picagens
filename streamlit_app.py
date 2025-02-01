@@ -371,12 +371,11 @@ def filtrar_dias_trabalho(df):
     return df2
 
 def tem_picagem(row):
-colunas_picagem = ['E1', 'E2', 'E3', 'E4', 'S1', 'S2', 'S3', 'S4']
-for col in colunas_picagem:
-    if pd.notna(row.get(col)) and str(row[col]).strip() != '00:00':
-        return True
-return False
-
+    colunas_picagem = ['E1', 'E2', 'E3', 'E4', 'S1', 'S2', 'S3', 'S4']
+    for col in colunas_picagem:
+        if pd.notna(row.get(col)) and str(row[col]).strip() != '00:00':
+            return True
+    return False
 
 
 # ====================== LÓGICA PRINCIPAL ======================
