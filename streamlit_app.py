@@ -560,7 +560,7 @@ if uploaded_file is not None:
                     'Nome': 'NOME',
                     'N.º Mec.': 'Nº MECANOGRAFICO',
                     'Dias em Cumprimento': 'DIAS EM CUMPRIMENTO',
-                    'Dias com Picagem': 'DIAS COM PICAGEM',
+                    'Dias com Picagem': 'TOTAL DE DIAS COM PELO MENOS 1 PICAGEM',
                     'Dias Trabalhados': 'TOTAL DE DIAS DE TRABALHO',
                     'Percentagem_Cumprimento': 'PERCENTAGEM DE CUMPRIMENTO'
                 }, inplace=True)
