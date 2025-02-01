@@ -370,6 +370,14 @@ def filtrar_dias_trabalho(df):
     df2.drop(columns=['dow','eh_aus','incl'], inplace=True, errors='ignore')
     return df2
 
+def tem_picagem(row):
+colunas_picagem = ['E1', 'E2', 'E3', 'E4', 'S1', 'S2', 'S3', 'S4']
+for col in colunas_picagem:
+    if pd.notna(row.get(col)) and str(row[col]).strip() != '00:00':
+        return True
+return False
+
+
 
 # ====================== LÓGICA PRINCIPAL ======================
 
@@ -420,6 +428,13 @@ if uploaded_file is not None:
             # 4) Dias Trabalhados
             df_trabalho = filtrar_dias_trabalho(df_final)
 
+            df_trabalho['Teve Picagem'] = df_trabalho.apply(tem_picagem, axis=1)
+
+            # Contar os dias com picagem por colaborador
+            df_com_picagem = df_trabalho[df_trabalho['Teve Picagem'] == True]
+            df_dias_com_picagem = df_com_picagem.groupby(['N.º Mec.', 'Nome'])['Data'].nunique().reset_index(name='Dias com Picagem')
+
+
             # 5) Agrupamento: Dias Possíveis
             df_possible = df_base.groupby(['N.º Mec.', 'Nome'])['Data'].nunique().reset_index(name='Dias Possíveis')
             # 6) Agrupamento: Dias Trabalhados
@@ -427,6 +442,16 @@ if uploaded_file is not None:
             df_merged = pd.merge(df_possible, df_worked, on=['N.º Mec.', 'Nome'], how='outer').fillna(0)
             df_merged['Dias Possíveis'] = df_merged['Dias Possíveis'].astype(int)
             df_merged['Dias Trabalhados'] = df_merged['Dias Trabalhados'].astype(int)
+
+            df_merged = pd.merge(
+                df_merged, 
+                df_dias_com_picagem, 
+                on=['N.º Mec.', 'Nome'], 
+                how='left'
+            ).fillna({'Dias com Picagem': 0})
+
+            df_merged['Dias com Picagem'] = df_merged['Dias com Picagem'].astype(int)
+
 
             # 7) Verificação de cumprimento
             df_trabalho['Cumpriu Horário'] = df_trabalho.apply(lambda row: verificar_entrada_saida(row, tolerancia), axis=1)
@@ -531,14 +556,17 @@ if uploaded_file is not None:
                 df_merged['Dias em Cumprimento'] = df_merged['Dias em Cumprimento'].astype(int)
                 df_merged['Dias Trabalhados'] = df_merged['Dias Trabalhados'].astype(int)
 
-                df_detalhamento = df_merged[['Nome', 'N.º Mec.', 'Dias em Cumprimento', 'Dias Trabalhados', 'Percentagem_Cumprimento']].copy()
+                df_detalhamento = df_merged[['Nome', 'N.º Mec.', 'Dias em Cumprimento', 'Dias Trabalhados', 'Dias com Picagem', 'Percentagem_Cumprimento']].copy()
+
                 df_detalhamento.rename(columns={
                     'Nome': 'NOME',
                     'N.º Mec.': 'Nº MECANOGRAFICO',
-                    'Dias em Cumprimento': 'DIAS EM CUMPRIMENTOS',
+                    'Dias em Cumprimento': 'DIAS EM CUMPRIMENTO',
+                    'Dias com Picagem': 'DIAS COM PICAGEM',
                     'Dias Trabalhados': 'TOTAL DE DIAS DE TRABALHO',
                     'Percentagem_Cumprimento': 'PERCENTAGEM DE CUMPRIMENTO'
                 }, inplace=True)
+
 
                 df_detalhamento = df_detalhamento.sort_values(by='NOME', ascending=True).reset_index(drop=True)
                 df_detalhamento['PERCENTAGEM DE CUMPRIMENTO'] = df_detalhamento['PERCENTAGEM DE CUMPRIMENTO'].replace({'nan': '-', 'inf': '-', '-': '-'})
